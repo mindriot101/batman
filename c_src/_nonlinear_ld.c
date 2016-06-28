@@ -15,9 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef BATMAN_PYTHON
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include "numpy/arrayobject.h"
+#endif
+
 #include <math.h>
 
 #if defined (_OPENMP)
@@ -31,7 +34,6 @@
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
-static PyObject *_nonlinear_ld(PyObject *self, PyObject *args);
 
 double intensity(double x, double c1, double c2, double c3, double c4, double norm)
 {
@@ -54,12 +56,76 @@ double area(double d, double x, double R)
 	else return x*x*acos(arg1) + R*R*acos(arg2) - 0.5*sqrt(arg3);		//partial overlap
 }
 
+/*
+NOTE:  the safest way to access numpy arrays is to use the PyArray_GETITEM and PyArray_SETITEM functions.
+Here we use a trick for faster access and more convenient access, where we set a pointer to the 
+beginning of the array with the PyArray_DATA (e.g., f_array) and access elements with e.g., f_array[i].
+Success of this operation depends on the numpy array storing data in blocks equal in size to a C double.
+If you run into trouble along these lines, I recommend changing the array access to something like:
+	d = PyFloat_AsDouble(PyArray_GETITEM(ds, PyArray_GetPtr(ds, &i))); 
+where ds is a numpy array object.
+
+
+Laura Kreidberg 07/2015
+*/
+
+void nonlinear_ld(double *ds, double *fs, int len, double rprs, double c1, double c2, double c3, double c4, double fac, int nthreads) {
+#if defined (_OPENMP)
+  omp_set_num_threads(nthreads);	//specifies number of threads (if OpenMP is supported)
+#endif
+
+  double norm = (-c1/10. - c2/6. - 3.*c3/14. - c4/4. + 0.5)*2.*M_PI; 	//normalization for intensity profile (faster to calculate it once, rather than every time intensity is called)		
+  int i;
+  double x_in, x_out, delta, x, dx, A_i, A_f, I, d;
+
+#if defined (_OPENMP)
+#pragma omp parallel for private(d, x_in, x_out, delta, x, dx, A_i, A_f, I)
+#endif
+  for(i = 0; i < len; i++) {
+    d = ds[i];
+    x_in = MAX(d - rprs, 0.);					//lower bound for integration
+    x_out = MIN(d + rprs, 1.0);					//upper bound for integration
+
+    if (x_in >= 1.) {
+      fs[i] = 1.0;				//flux = 1. if the planet is not transiting
+    } else {
+
+      delta = 0.;						//variable to store the integrated intensity, \int I dA
+      x = x_in;						//starting radius for integration
+      dx = fac*acos(x); 					//initial step size 
+
+      x += dx;						//first step
+
+      A_i = 0.;						//initial area
+
+      while(x < x_out) {
+	A_f = area(d, x, rprs);				//calculates area of overlapping circles
+	I = intensity(x - dx/2.,c1,c2, c3, c4, norm); 	//intensity at the midpoint
+	delta += (A_f - A_i)*I;				//increase in transit depth for this integration step
+	dx = fac*acos(x);  				//updating step size
+	x = x + dx;					//stepping to next element
+	A_i = A_f;					//storing area
+      }
+
+      dx = x_out - x + dx;  					//calculating change in radius for last step  FIXME
+      x = x_out;						//final radius for integration
+      A_f = area(d, x, rprs);					//area for last integration step
+      I = intensity(x - dx/2.,c1,c2, c3, c4, norm); 		//intensity at the midpoint 
+      delta += (A_f - A_i)*I;					//increase in transit depth for this integration step
+
+      fs[i] = 1.0 - delta;	//flux equals 1 - \int I dA 
+    }
+  }
+}
+
+#ifdef BATMAN_PYTHON
+
 static PyObject *_nonlinear_ld(PyObject *self, PyObject *args)
 {
-	double rprs, d, fac, A_i, x, I; 
+	double rprs, fac; 
 	int nthreads;
-	npy_intp i, dims[1];
-	double dx, A_f, x_in, x_out, delta, c1, c2, c3, c4;
+	npy_intp dims[1];
+	double c1, c2, c3, c4;
 	
 	PyArrayObject *ds, *flux;
   	if(!PyArg_ParseTuple(args,"Oddddddi", &ds, &rprs, &c1, &c2, &c3, &c4, &fac, &nthreads)) return NULL;
@@ -70,63 +136,8 @@ static PyObject *_nonlinear_ld(PyObject *self, PyObject *args)
 	double *f_array = PyArray_DATA(flux);
 	double *d_array = PyArray_DATA(ds);
 
-	/*
-		NOTE:  the safest way to access numpy arrays is to use the PyArray_GETITEM and PyArray_SETITEM functions.
-		Here we use a trick for faster access and more convenient access, where we set a pointer to the 
-		beginning of the array with the PyArray_DATA (e.g., f_array) and access elements with e.g., f_array[i].
-		Success of this operation depends on the numpy array storing data in blocks equal in size to a C double.
-		If you run into trouble along these lines, I recommend changing the array access to something like:
-			d = PyFloat_AsDouble(PyArray_GETITEM(ds, PyArray_GetPtr(ds, &i))); 
-		where ds is a numpy array object.
-
-
-		Laura Kreidberg 07/2015
-	*/
+	nonlinear_ld(d_array, f_array, dims[0], rprs, c1, c2, c3, c4, fac, nthreads);
 	
-	#if defined (_OPENMP)
-	omp_set_num_threads(nthreads);	//specifies number of threads (if OpenMP is supported)
-	#endif
-
-	double norm = (-c1/10. - c2/6. - 3.*c3/14. - c4/4. + 0.5)*2.*M_PI; 	//normalization for intensity profile (faster to calculate it once, rather than every time intensity is called)		
-
-	#if defined (_OPENMP)
-	#pragma omp parallel for private(d, x_in, x_out, delta, x, dx, A_i, A_f, I)
-	#endif
-	for(i = 0; i < dims[0]; i++)
-	{
-		d = d_array[i];
-		x_in = MAX(d - rprs, 0.);					//lower bound for integration
-		x_out = MIN(d + rprs, 1.0);					//upper bound for integration
-
-		if(x_in >= 1.) f_array[i] = 1.0;				//flux = 1. if the planet is not transiting
-		else
-		{
-			delta = 0.;						//variable to store the integrated intensity, \int I dA
-			x = x_in;						//starting radius for integration
-			dx = fac*acos(x); 					//initial step size 
-
-			x += dx;						//first step
-
-			A_i = 0.;						//initial area
-	
-			while(x < x_out)
-			{
-				A_f = area(d, x, rprs);				//calculates area of overlapping circles
-				I = intensity(x - dx/2.,c1,c2, c3, c4, norm); 	//intensity at the midpoint
-				delta += (A_f - A_i)*I;				//increase in transit depth for this integration step
-				dx = fac*acos(x);  				//updating step size
-				x = x + dx;					//stepping to next element
-				A_i = A_f;					//storing area
-			}
-			dx = x_out - x + dx;  					//calculating change in radius for last step  FIXME
-			x = x_out;						//final radius for integration
-			A_f = area(d, x, rprs);					//area for last integration step
-			I = intensity(x - dx/2.,c1,c2, c3, c4, norm); 		//intensity at the midpoint 
-			delta += (A_f - A_i)*I;					//increase in transit depth for this integration step
-
-			f_array[i] = 1.0 - delta;	//flux equals 1 - \int I dA 
-		}
-	}
 	return PyArray_Return((PyArrayObject *)flux);
 
 } 
@@ -165,3 +176,4 @@ static PyMethodDef _nonlinear_ld_methods[] = {
 	}
 #endif
 
+#endif // BATMAN_PYTHON
