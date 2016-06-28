@@ -63,15 +63,16 @@ def hasfunction(cc, funcname, include=None, extra_postargs=None):
 has_openmp, needs_gomp = detect_openmp()
 parallel_args = ['-fopenmp'] if has_openmp else []
 parallel_libraries = ['gomp'] if needs_gomp else []
+defines = [('BATMAN_PYTHON', None)]
 
-_nonlinear_ld = Extension('batman._nonlinear_ld', ['c_src/_nonlinear_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries) 
-_quadratic_ld = Extension('batman._quadratic_ld', ['c_src/_quadratic_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries) 
-_uniform_ld   = Extension('batman._uniform_ld', ['c_src/_uniform_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries) 
-_logarithmic_ld   = Extension('batman._logarithmic_ld', ['c_src/_logarithmic_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries) 
-_exponential_ld   = Extension('batman._exponential_ld', ['c_src/_exponential_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries) 
-_custom_ld   = Extension('batman._custom_ld', ['c_src/_custom_ld.c', 'c_src/_custom_intensity.c'], extra_compile_args = parallel_args, libraries = parallel_libraries) 
-_rsky = Extension('batman._rsky', ['c_src/_rsky.c'])
-_eclipse = Extension('batman._eclipse', ['c_src/_eclipse.c'])
+_nonlinear_ld = Extension('batman._nonlinear_ld', ['c_src/_nonlinear_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries, define_macros=defines)
+_quadratic_ld = Extension('batman._quadratic_ld', ['c_src/_quadratic_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries, define_macros=defines)
+_uniform_ld   = Extension('batman._uniform_ld', ['c_src/_uniform_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries, define_macros=defines)
+_logarithmic_ld   = Extension('batman._logarithmic_ld', ['c_src/_logarithmic_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries, define_macros=defines)
+_exponential_ld   = Extension('batman._exponential_ld', ['c_src/_exponential_ld.c'], extra_compile_args = parallel_args, libraries = parallel_libraries, define_macros=defines)
+_custom_ld   = Extension('batman._custom_ld', ['c_src/_custom_ld.c', 'c_src/_custom_intensity.c'], extra_compile_args = parallel_args, libraries = parallel_libraries, define_macros=defines)
+_rsky = Extension('batman._rsky', ['c_src/_rsky.c'], define_macros=defines)
+_eclipse = Extension('batman._eclipse', ['c_src/_eclipse.c'], define_macros=defines)
 
 setup(	name='batman-package', 
 	version="2.3.0",
