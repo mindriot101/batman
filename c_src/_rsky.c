@@ -15,18 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef BATMAN_PYTHON
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h>
 #include "numpy/arrayobject.h"
+#endif
+
 #include<math.h>
 
 #ifndef M_PI
     #define M_PI 3.14159265358979323846
 #endif
 
+#ifdef BATMAN_PYTHON
 static PyObject *_rsky(PyObject *self, PyObject *args);
 
 static PyObject *_getf(PyObject *self, PyObject *args);
+#endif
 
 double getE(double M, double e)	//calculates the eccentric anomaly (see Seager Exoplanets book:  Murray & Correia eqn. 5 -- see section 3)
 {
@@ -36,6 +41,7 @@ double getE(double M, double e)	//calculates the eccentric anomaly (see Seager E
 	return E;
 }
 
+#ifdef BATMAN_PYTHON
 static PyObject *_rsky(PyObject *self, PyObject *args)
 {
 	/*
@@ -188,3 +194,4 @@ static PyMethodDef _rsky_methods[] = {
 	}
 #endif
 
+#endif // BATMAN_PYTHON
