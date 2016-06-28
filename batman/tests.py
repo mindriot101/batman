@@ -19,6 +19,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 import timeit
+import sys
 from .transitmodel import *
 from .openmp import detect
 
@@ -111,4 +112,6 @@ def test():
   *" \.--._ \           
      ( ^^ )\/
       \__/ *""")
+
+		sys.exit(failures)
 	         
