@@ -3,6 +3,7 @@ HEADER := c_src/batman.h
 OBJECTS := $(SOURCES:.c=.o)
 SONAME := libbatman.so
 ANAME := libbatman.a
+COMMON := -g -O2 -Wall -Wextra
 RUN := a.out
 PREFIX ?= /usr/local
 
@@ -10,17 +11,17 @@ PREFIX ?= /usr/local
 
 all: $(RUN) $(ANAME)
 	
-$(RUN): testing/main.c $(SONAME)
-	$(CC) $< -L. -lbatman -lm -Ic_src -o $@ -Wall -Wextra
+$(RUN): testing/main.c $(ANAME)
+	$(CC) $< -L. -lbatman -lm -Ic_src -o $@ $(COMMON)
 
 $(SONAME): $(OBJECTS)
-	$(CC) -shared -o $@ $^
+	$(CC) -shared -o $@ $^ $(COMMON)
 
 $(ANAME): $(OBJECTS)
 	ar rcs $@ $(OBJECTS)
 
 %.o: %.c
-	$(CC) -c -fPIC $< -o $@
+	$(CC) -c -fPIC $< -o $@ $(COMMON)
 
 install: $(ANAME) $(SONAME) $(HEADER)
 	mkdir -p $(PREFIX)/include $(PREFIX)/lib
