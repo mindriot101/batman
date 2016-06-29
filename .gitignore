@@ -16,3 +16,4 @@ dist
 MANIFEST
 batman_package.egg-info
 *.o
+*.a
