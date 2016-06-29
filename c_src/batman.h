@@ -1,6 +1,10 @@
 #ifndef BATMAN_H_
 #define BATMAN_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // _rsky.c
 double getE(double M, double e);
 void rsky(const double *ts, double *ds, int len, double tc, double per, double a, double inc, double ecc, double omega, int transittype);
@@ -37,5 +41,9 @@ typedef struct {
 } Params;
 
 double *light_curve(const Params *params, const double *t, const int length);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //  BATMAN_H_
