@@ -24,7 +24,7 @@ void linspace(double *data, double min, double max, int N) {
     }
 }
 
-double get_fac(Params *params) {
+double get_fac(const Params *params) {
     int i, nds = 1000;
     double fac_low = 5.0E-4, fac_high = 1.0;
     double *ds = my_alloc(nds);
@@ -74,7 +74,7 @@ double get_fac(Params *params) {
     return fac;
 }
 
-double *light_curve(Params *params, double *t, int length) {
+double *light_curve(const Params *params, const double *t, const int length) {
     double *flux = my_alloc(length);
     double *ds = my_alloc(length);
 

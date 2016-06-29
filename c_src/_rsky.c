@@ -41,7 +41,7 @@ double getE(double M, double e)	//calculates the eccentric anomaly (see Seager E
 	return E;
 }
 
-void rsky(double *ts, double *ds, int len, double tc, double per, double a, double inc, double ecc, double omega, int transittype) {
+void rsky(const double *ts, double *ds, int len, double tc, double per, double a, double inc, double ecc, double omega, int transittype) {
   double n = 2.*M_PI/per;	// mean motion
   double d = 0., BIGD = 100.;
   int i;

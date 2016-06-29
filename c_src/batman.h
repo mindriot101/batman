@@ -3,7 +3,7 @@
 
 // _rsky.c
 double getE(double M, double e);
-void rsky(double *ts, double *ds, int len, double tc, double per, double a, double inc, double ecc, double omega, int transittype);
+void rsky(const double *ts, double *ds, int len, double tc, double per, double a, double inc, double ecc, double omega, int transittype);
 void getf(double *ts, double *fs, int len, double tc, double per, double a, double inc, double ecc, double omega, int transittype);
 
 // _eclipse.c
@@ -36,6 +36,6 @@ typedef struct {
     };
 } Params;
 
-double *light_curve(Params *params, double *t, int length);
+double *light_curve(const Params *params, const double *t, const int length);
 
 #endif //  BATMAN_H_
