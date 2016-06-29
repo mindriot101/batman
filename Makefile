@@ -1,10 +1,12 @@
 SOURCES := c_src/_rsky.c c_src/_eclipse.c c_src/_nonlinear_ld.c c_src/light_curve.c
+HEADER := c_src/batman.h
 OBJECTS := $(SOURCES:.c=.o)
 SONAME := libbatman.so
 ANAME := libbatman.a
 RUN := a.out
+PREFIX ?= /usr/local
 
-.PHONY: clean test
+.PHONY: clean test install
 
 all: $(RUN) $(ANAME)
 	
@@ -19,7 +21,11 @@ $(ANAME): $(OBJECTS)
 
 %.o: %.c
 	$(CC) -c -fPIC $< -o $@
- 
+
+install: $(ANAME) $(SONAME) $(HEADER)
+	mkdir -p $(PREFIX)/include $(PREFIX)/lib
+	install -m 0644 $(ANAME) $(SONAME) $(PREFIX)/lib
+	install -m 0644 $(HEADER) $(PREFIX)/include
 
 test: $(RUN)
 	time ./$(RUN)
