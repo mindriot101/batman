@@ -14,4 +14,28 @@ double intensity(double x, double c1, double c2, double c3, double c4, double no
 double area(double d, double x, double R);
 void nonlinear_ld(double *ds, double *fs, int len, double rprs, double c1, double c2, double c3, double c4, double fac, int nthreads);
 
+// light_curve.c
+
+typedef struct {
+    double c1;
+    double c2;
+    double c3;
+    double c4;
+} NonlinearLimbDarkeningParameters;
+
+typedef struct {
+    double t0;
+    double per;
+    double rp;
+    double a;
+    double inc;
+    double ecc;
+    double w;
+    union {
+        NonlinearLimbDarkeningParameters ldc;
+    };
+} Params;
+
+double *light_curve(Params *params, double *t, int length);
+
 #endif //  BATMAN_H_
