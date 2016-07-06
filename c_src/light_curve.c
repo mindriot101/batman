@@ -24,7 +24,7 @@ void linspace(double *data, double min, double max, int N) {
     }
 }
 
-double get_fac(const Params *params) {
+double get_fac(const Params *params, LimbDarkeningType ldc_type) {
     int i, nds = 1000;
     double fac_low = 5.0E-4, fac_high = 1.0;
     double *ds = my_alloc(nds);
@@ -32,8 +32,24 @@ double get_fac(const Params *params) {
     double *f = my_alloc(nds);
 
     linspace(ds, 0., 1. + params->rp, nds);
-    nonlinear_ld(ds, f0, nds, params->rp,
-            params->ldc.c1, params->ldc.c2, params->ldc.c3, params->ldc.c4, fac_low, 1);
+
+    /* Initialise */
+    switch (ldc_type) {
+        case NONLINEAR:
+            nonlinear_ld(ds, f0, nds, params->rp,
+                    params->nlldc.c1, params->nlldc.c2, params->nlldc.c3, params->nlldc.c4, fac_low, 1);
+            break;
+        case EXPONENTIAL:
+            exponential_ld(ds, f0, nds, params->rp, params->ldc.c1, params->ldc.c2, fac_low, 1);
+            break;
+        case LOGARITHMIC:
+            logarithmic_ld(ds, f0, nds, params->rp, params->ldc.c1, params->ldc.c2, fac_low, 1);
+            break;
+        default:
+            fprintf(stderr, "Non-supported ldc type\n");
+            exit(1);
+            break;
+    }
 
     double err = 0.;
     int n = 0;
@@ -42,8 +58,22 @@ double get_fac(const Params *params) {
 
     while ((err > max_error) || (err < (0.99 * max_error))) {
         fac = (fac_low + fac_high) / 2.0;
-        nonlinear_ld(ds, f, nds, params->rp,
-            params->ldc.c1, params->ldc.c2, params->ldc.c3, params->ldc.c4, fac, 1);
+        switch (ldc_type) {
+            case NONLINEAR:
+                nonlinear_ld(ds, f, nds, params->rp,
+                    params->nlldc.c1, params->nlldc.c2, params->nlldc.c3, params->nlldc.c4, fac, 1);
+                break;
+            case EXPONENTIAL:
+                exponential_ld(ds, f, nds, params->rp, params->ldc.c1, params->ldc.c2, fac, 1);
+                break;
+            case LOGARITHMIC:
+                logarithmic_ld(ds, f, nds, params->rp, params->ldc.c1, params->ldc.c2, fac, 1);
+                break;
+            default:
+                fprintf(stderr, "Non-supported ldc type\n");
+                exit(1);
+                break;
+        }
 
         double max_abs_derror = -10000000;
         for (i=0; i<nds; i++) {
@@ -74,14 +104,47 @@ double get_fac(const Params *params) {
     return fac;
 }
 
-double *light_curve(const Params *params, const double *t, const int length) {
+double *light_curve(const Params *params, const double *t, const int length, LimbDarkeningType limb_darkening_type) {
+    int nthreads = 1;
     double *flux = my_alloc(length);
     double *ds = my_alloc(length);
 
     rsky(t, ds, length, params->t0, params->per, params->a, DEC2RAD(params->inc), params->ecc, DEC2RAD(params->w), 1);
-    double fac = get_fac(params);
 
-    nonlinear_ld(ds, flux, length, params->rp, params->ldc.c1, params->ldc.c2, params->ldc.c3, params->ldc.c4, fac, 1);
+    double fac = 0.;
+
+
+    switch (limb_darkening_type) {
+        case UNIFORM:
+            uniform_ld(ds, flux, length, params->rp, nthreads);
+            break;
+        case LINEAR:
+            quadratic_ld(ds, flux, length, params->rp, params->ldc.c1, 0., nthreads);
+            break;
+        case EXPONENTIAL:
+            fac = get_fac(params, limb_darkening_type);
+            exponential_ld(ds, flux, length, params->rp, params->ldc.c1, params->ldc.c2, fac, nthreads);
+            break;
+        case LOGARITHMIC:
+            fac = get_fac(params, limb_darkening_type);
+            logarithmic_ld(ds, flux, length, params->rp, params->ldc.c1, params->ldc.c2, fac, nthreads);
+            break;
+        case QUADRATIC:
+            quadratic_ld(ds, flux, length, params->rp, params->ldc.c1, params->ldc.c2, nthreads);
+        case NONLINEAR:
+            fac = get_fac(params, limb_darkening_type);
+            nonlinear_ld(ds, flux, length, params->rp, params->nlldc.c1, params->nlldc.c2, params->nlldc.c3, params->nlldc.c4,
+                fac, nthreads);
+            break;
+        case SQUAREROOT:
+            fac = get_fac(params, limb_darkening_type);
+            nonlinear_ld(ds, flux, length, params->rp, params->ldc.c2, params->ldc.c1, 0., 0., fac, nthreads);
+            break;
+        default:
+            fprintf(stderr, "Unsupported limb darkening type\n");
+            exit(1);
+            break;
+    }
 
     free(ds);
     return flux;

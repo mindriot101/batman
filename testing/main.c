@@ -57,7 +57,7 @@ int main() {
     params.inc = 87;
     params.ecc = 0;
     params.w = 90;
-    params.ldc = ldc;
+    params.nlldc = ldc;
 
     double *hjd = NULL;
     int length = 0, i = 0;
@@ -65,7 +65,8 @@ int main() {
     read_hjd("testtimes.txt", &hjd, &length);
     printf("%d times read\n", length);
 
-    double *lc = light_curve(&params, hjd, length);
+    LimbDarkeningType ldc_type = NONLINEAR;
+    double *lc = light_curve(&params, hjd, length, ldc_type);
 
     FILE *outfile = fopen("c-lightcurve.txt", "w");
     for (i=0; i<length; i++) {

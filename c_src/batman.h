@@ -21,12 +21,17 @@ void exponential_ld(double *ds, double *fs, int len, double rprs, double c1, dou
 void logarithmic_ld(double *ds, double *fs, int len, double rprs, double c1, double c2, double fac, int nthreads);
 
 // _quadratic_ld.c
-void quadratic_ld(double *ds, double *fs, int len, double p, double c1, double c2, int nthreads);
+void quadratic_ld(double *ds, double *fs, int len, double rprs, double c1, double c2, int nthreads);
 
 // _nonlinear.c
 void nonlinear_ld(double *ds, double *fs, int len, double rprs, double c1, double c2, double c3, double c4, double fac, int nthreads);
 
 // light_curve.c
+
+typedef struct {
+    double c1;
+    double c2;
+} LimbDarkeningParameters;
 
 typedef struct {
     double c1;
@@ -44,11 +49,22 @@ typedef struct {
     double ecc;
     double w;
     union {
-        NonlinearLimbDarkeningParameters ldc;
+        NonlinearLimbDarkeningParameters nlldc;
+        LimbDarkeningParameters ldc;
     };
 } Params;
 
-double *light_curve(const Params *params, const double *t, const int length);
+typedef enum {
+    UNIFORM,
+    LINEAR,
+    EXPONENTIAL,
+    LOGARITHMIC,
+    QUADRATIC,
+    NONLINEAR,
+    SQUAREROOT,
+} LimbDarkeningType;
+
+double *light_curve(const Params *params, const double *t, const int length, LimbDarkeningType limb_darkening_type);
 
 #ifdef __cplusplus
 }
