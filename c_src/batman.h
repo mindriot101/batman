@@ -6,9 +6,7 @@ extern "C" {
 #endif
 
 // _rsky.c
-double getE(double M, double e);
 void rsky(const double *ts, double *ds, int len, double tc, double per, double a, double inc, double ecc, double omega, int transittype);
-void getf(double *ts, double *fs, int len, double tc, double per, double a, double inc, double ecc, double omega, int transittype);
 
 // _eclipse.c
 void eclipse(double *ds, double *fs, int len, double p, double fp, int nthreads);
