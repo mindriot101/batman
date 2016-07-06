@@ -19,6 +19,9 @@ void exponential_ld(double *ds, double *fs, int len, double rprs, double c1, dou
 // _logarithmic_ld.c
 void logarithmic_ld(double *ds, double *fs, int len, double rprs, double c1, double c2, double fac, int nthreads);
 
+// _quadratic_ld.c
+void quadratic_ld(double *ds, double *fs, int len, double p, double c1, double c2, int nthreads);
+
 // _nonlinear.c
 void nonlinear_ld(double *ds, double *fs, int len, double rprs, double c1, double c2, double c3, double c4, double fac, int nthreads);
 
