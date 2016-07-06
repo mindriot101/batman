@@ -13,6 +13,9 @@ void getf(double *ts, double *fs, int len, double tc, double per, double a, doub
 // _eclipse.c
 void eclipse(double *ds, double *fs, int len, double p, double fp, int nthreads);
 
+// _uniform_ld.c
+void uniform_ld(double *ds, double *fs, int len, double rprs, int nthreads);
+
 // _exponential_ld.c
 void exponential_ld(double *ds, double *fs, int len, double rprs, double c1, double c2, double fac, int nthreads);
 
