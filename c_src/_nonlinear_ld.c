@@ -35,14 +35,14 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 
 
-double intensity(double x, double c1, double c2, double c3, double c4, double norm)
+static double intensity(double x, double c1, double c2, double c3, double c4, double norm)
 {
 	if(x > 0.99995) x = 0.99995;
 	double sqrtmu = pow(1. - x*x,0.25);
 	return (1. - c1*(1. - sqrtmu) - c2*(1. - pow(sqrtmu,2.)) - c3*(1. - pow(sqrtmu, 3.)) - c4*(1. - pow(sqrtmu,4.)))/norm; 	
 }
 
-double area(double d, double x, double R)
+static double area(double d, double x, double R)
 {
 	/*
 	Returns area of overlapping circles with radii r and R; separated by a distance d

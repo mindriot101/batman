@@ -1,4 +1,4 @@
-SOURCES := c_src/_rsky.c c_src/_eclipse.c c_src/_nonlinear_ld.c c_src/light_curve.c
+SOURCES := c_src/_rsky.c c_src/_eclipse.c c_src/_nonlinear_ld.c c_src/light_curve.c c_src/_exponential_ld.c
 HEADER := c_src/batman.h
 OBJECTS := $(SOURCES:.c=.o)
 SONAME := libbatman.so
