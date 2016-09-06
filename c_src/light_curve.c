@@ -131,6 +131,7 @@ double *light_curve(const Params *params, const double *t, const int length, Lim
             break;
         case QUADRATIC:
             quadratic_ld(ds, flux, length, params->rp, params->ldc.c1, params->ldc.c2, nthreads);
+            break;
         case NONLINEAR:
             fac = get_fac(params, limb_darkening_type);
             nonlinear_ld(ds, flux, length, params->rp, params->nlldc.c1, params->nlldc.c2, params->nlldc.c3, params->nlldc.c4,
