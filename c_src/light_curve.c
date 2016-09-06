@@ -75,7 +75,7 @@ double get_fac(const Params *params, LimbDarkeningType ldc_type) {
                 break;
         }
 
-        double max_abs_derror = -10000000;
+        double max_abs_derror = f[0] - f0[0];
         for (i=0; i<nds; i++) {
             double derror = fabs(f[i] - f0[i]);
             if (derror > max_abs_derror) {
